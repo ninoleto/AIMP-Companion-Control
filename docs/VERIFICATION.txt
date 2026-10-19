@@ -33,7 +33,7 @@ Final binary/package checks:
   standalone source artifacts. All dist/SHA256SUMS.txt digests verified.
 - Ordinary unsigned DLLs without packing or obfuscation.
 
-AIMPPACK SHA-256:
+AIMPPACK SHA-256 (original supplied package, before notices packaging revision):
 85d05860db83edce61053d3bf012bd15bcc454ec10bd29622716d8ab6bd3f33e
 
 Not performed here:
@@ -47,3 +47,18 @@ this patch adds no expected-GUID precondition for multi-request clients. Keep th
 previous working native/module packages. The SDK-double and cross-compilation
 checks establish source behavior and binary construction, not Windows runtime
 acceptance or an exhaustive security audit.
+
+NOTICES PACKAGING REVISION — 2026-10-19
+- scripts/package.py now embeds THIRD-PARTY-NOTICES.txt beside each DLL.
+- All four original archive members (two DLLs and two language files) remain
+  byte-for-byte identical. Both embedded notices match the standalone notices.
+- ZIP integrity, distribution/release checksums and repeat packaging passed.
+- No DLL compilation, Windows/AIMP execution or Defender scan was performed.
+- Updated installer SHA-256:
+  8e3cd89fd907e35681355b1d3c3bdb6baf3f363375fa9cdb1af690736dab5a47
+- Unchanged i686 DLL SHA-256:
+  9e518213845ba555a30c85187ebf578d3580c2a8f0191efff50eb9fdf9d9f92a
+- Unchanged x86_64 DLL SHA-256:
+  fe57bf6a76ce510ccc777646f058e9d3c71dbba04e3390e10f0db4d479ff8452
+See docs/PACKAGING-NOTICES.md for member paths and checks. The original tag and
+original FILE-SHA256SUMS.txt inventory are preserved as historical records.

@@ -1,5 +1,7 @@
 # Publication review — 19 October 2026
 
+This records the initial publication. The subsequent [notices packaging revision](PACKAGING-NOTICES.md) adds notices inside the native installer and supersedes its original package hash while preserving both DLLs byte-for-byte.
+
 Reviewed pair: native **0.3.1 preview** and Companion **1.0.0-beta.8**. Source was imported from `AIMP-Companion-0.3.1-beta8-full-source.zip` (SHA-256 `7d6a3c741e3698e7bbb01f1c5de78171e7a8dd2d5e86c558088cae7467732ada`). The supplied archive contains no Git history. Upstream revisions and attribution remain in each project's provenance file.
 
 ## Focused review and preparation
@@ -22,7 +24,7 @@ All implementation files, tests, SDK headers, dependency pins, lockfiles and exi
 - Parsed all four PowerShell diagnostics successfully; did not execute them against AIMP.
 - Checked source for common private-key and GitHub/AWS token patterns; found none. This is a limited pattern check.
 
-The native ASan/UBSan suite, SDK-double tests and pinned x86/x64 cross-build were **not rerun** on this Windows machine: WSL and a suitable C++ toolchain are unavailable. Their supplied results remain in [native verification](https://github.com/ninoleto/AIMP-Companion-Control/blob/v0.3.1-preview/docs/VERIFICATION.txt). The module's supplied evidence remains in [module verification](https://github.com/ninoleto/companion-module-ninoleto-aimp/blob/v1.0.0-beta.8/VERIFICATION.md). No package was rebuilt or repacked for publication.
+The native ASan/UBSan suite, SDK-double tests and pinned x86/x64 cross-build were **not rerun** on this Windows machine: WSL and a suitable C++ toolchain are unavailable. Their supplied results remain in [native verification](https://github.com/ninoleto/AIMP-Companion-Control/blob/v0.3.1-preview/docs/VERIFICATION.txt). The module's supplied evidence remains in [module verification](https://github.com/ninoleto/companion-module-ninoleto-aimp/blob/v1.0.0-beta.8/VERIFICATION.md). No package was rebuilt or repacked during initial publication; the later native packaging revision is documented separately above.
 
 ## Remaining limitations and findings
 

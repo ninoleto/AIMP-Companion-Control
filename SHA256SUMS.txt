@@ -1,2 +1,2 @@
-85d05860db83edce61053d3bf012bd15bcc454ec10bd29622716d8ab6bd3f33e  AimpCompanionControl-0.3.1-preview.aimppack
-176f629b669aea8fe6d1b31f9f2f4ef1eee22d5b1bb28ddbdcc34a481cf40aba  THIRD-PARTY-NOTICES.txt
+8e3cd89fd907e35681355b1d3c3bdb6baf3f363375fa9cdb1af690736dab5a47  AimpCompanionControl-0.3.1-preview.aimppack
+97dbd08fed934ab733046f4d209420d4f6f31cde22e43bf51b3ae44706282ab0  THIRD-PARTY-NOTICES.txt

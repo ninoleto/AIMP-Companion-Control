@@ -4,7 +4,9 @@ Pair with [Companion module 1.0.0-beta.8](https://github.com/ninoleto/companion-
 
 Extended focused-track actions now use AIMP's actual active playlist and focus index. Missing/invalid/group-only focus returns an error before reading or changing a track. Existing controls and legacy navigation are retained.
 
-The attached installer is the original supplied, tested package, unchanged. Source publication adds documentation and licence material; it does not rebuild or repack the installer. Download and retain `THIRD-PARTY-NOTICES.txt` with it. Source, tests, SDK headers, vendored JSON header and licences are in this repository; generated output is excluded from Git.
+The installer has a **notices-only packaging revision**: `THIRD-PARTY-NOTICES.txt` is now included beside each architecture's DLL. Both DLLs and both language-file copies remain byte-for-byte identical to the original tested installer; no DLL was recompiled. The installer SHA-256 has changed. The standalone notices remain available and match both embedded copies. Source, tests, SDK headers, vendored JSON header and licences are in this repository; generated output is excluded from Git.
+
+The original `v0.3.1-preview` source tag is preserved. The revised packaging script and [packaging verification](https://github.com/ninoleto/AIMP-Companion-Control/blob/main/docs/PACKAGING-NOTICES.md) are on `main`.
 
 ## Install
 
@@ -15,7 +17,7 @@ The attached installer is the original supplied, tested package, unchanged. Sour
 5. Test existing playback/rotaries, focus behavior, media/library controls, reconnect and shutdown. Use disposable playlists and copied media for mutation/tag tests. New preset captions require newly dragged presets; copied artwork is preserved.
 
 ```text
-85d05860db83edce61053d3bf012bd15bcc454ec10bd29622716d8ab6bd3f33e  AimpCompanionControl-0.3.1-preview.aimppack
+8e3cd89fd907e35681355b1d3c3bdb6baf3f363375fa9cdb1af690736dab5a47  AimpCompanionControl-0.3.1-preview.aimppack
 ```
 
 The AIMPPACK is for AIMP; the TGZ is for Companion. Fresh plugin settings use `127.0.0.1:19122`; existing installations should retain their working endpoint.
@@ -23,6 +25,8 @@ The AIMPPACK is for AIMP; the TGZ is for Companion. Fresh plugin settings use `1
 ## Verification and known limits
 
 Publication verified all 109 native archive file digests, installer members, versioned package hashes and the vendored JSON hash. The paired module's 102 tests, official checker and actual-host smoke against the unchanged TGZ passed (192 actions, 46 feedbacks, 503 presets, 624 variables, zero unexpected warnings). See [final review](https://github.com/ninoleto/AIMP-Companion-Control/blob/v0.3.1-preview/docs/FINAL-REVIEW.md) and [supplied native verification](https://github.com/ninoleto/AIMP-Companion-Control/blob/v0.3.1-preview/docs/VERIFICATION.txt).
+
+For the packaging revision, ZIP integrity passed, both embedded notice files exactly matched the repository/sidecar notices, all four original members were byte-identical, both original DLL SHA-256 hashes were unchanged, all generated checksums verified, and repeated packaging produced an identical installer. See the linked packaging report for exact hashes. This does not establish new Windows runtime or Defender validation.
 
 The supplied native report records portable ASan/UBSan tests, SDK-double tests and pinned x86/x64 cross-builds. Those native tests/builds were not rerun during publication because this machine has no WSL/suitable C++ toolchain. Leak detection was disabled in the supplied native tests. PowerShell scripts were parsed but not run against AIMP.
 

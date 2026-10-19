@@ -33,12 +33,15 @@ The build script produces:
 dist/AimpCompanionControl-i686.dll
 dist/AimpCompanionControl-x86_64.dll
 dist/AimpCompanionControl-0.3.1-preview.aimppack
+dist/THIRD-PARTY-NOTICES.txt
 dist/SHA256SUMS.txt
 ```
 
 Legacy controls and the audio, player, and playlist/queue extensions are compiled together. The C++17 runtime is linked statically against Windows UCRT; ASLR and NX are enabled. PE timestamps and package member dates are fixed for reproducibility. No packing, obfuscation, signing, background service, or updater is used. Toolchain licence notices are in `third_party/toolchain-licenses/`.
 
-The x86 alias in `src/plugin.def` supplies AIMP's undecorated `AIMPPluginGetHeader` entry point; x64 exports it directly. The `.aimppack` includes both architectures and the language file.
+The x86 alias in `src/plugin.def` supplies AIMP's undecorated `AIMPPluginGetHeader` entry point; x64 exports it directly. The `.aimppack` includes both architectures, each with its language file and a byte-identical copy of the repository's `THIRD-PARTY-NOTICES.txt` beside its DLL. The same notices are also copied to `dist/` and covered by its checksum file.
+
+To repackage existing DLLs without compiling them, place the verified `AimpCompanionControl-i686.dll` and `AimpCompanionControl-x86_64.dll` in `dist/`, then run `python3 scripts/package.py` (or `python scripts/package.py` on Windows). This only writes the installer, notices sidecar and distribution checksum file; it does not modify either DLL.
 
 ## Release verification
 

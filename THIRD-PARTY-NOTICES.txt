@@ -1,5 +1,5 @@
 AIMP Companion Control 0.3.1 preview — distribution notices
-The original installer is unchanged. Retain this file with the binary distribution.
+Retain this file with the binary distribution.
 SDK declarations retain Artem Izmaylov / AIMP copyright notices in sdk/*.h.
 SDK target: AIMP 5.40 build 2650; https://www.aimp.ru/
 

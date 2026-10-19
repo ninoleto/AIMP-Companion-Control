@@ -12,7 +12,7 @@ Version 0.3.1 corrects focused-target safety in the 0.3.0 feature set. Extended 
 4. Download **`ninoleto-aimp-1.0.0-beta.8.tgz`** from the [matching module release](https://github.com/ninoleto/companion-module-ninoleto-aimp/releases/tag/v1.0.0-beta.8) and verify its release checksum. In Companion, import it without extracting it. Select beta.8 on the existing connection and enable it. Keep the working host and port.
 5. Existing buttons remain. New presets become available after capability discovery; a previously copied button is not automatically redesigned.
 
-The AIMPPACK goes into AIMP; the TGZ goes into Companion. No compilation is required. Both architectures are included, and the x86 EQ getter workaround from 0.2.1 is retained.
+The AIMPPACK goes into AIMP; the TGZ goes into Companion. No compilation is required. Both architectures are included, each with `THIRD-PARTY-NOTICES.txt` beside its DLL, and the x86 EQ getter workaround from 0.2.1 is retained. The release installer was repackaged to add those notices; both DLLs retain their original tested bytes. See [packaging verification](docs/PACKAGING-NOTICES.md).
 
 ## Controls
 
