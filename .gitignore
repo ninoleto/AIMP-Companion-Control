@@ -1,0 +1,16 @@
+/build/
+/dist/
+__pycache__/
+*.pyc
+*.o
+*.obj
+*.dll
+*.aimppack
+*.tgz
+*.zip
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.*

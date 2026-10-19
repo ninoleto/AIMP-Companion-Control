@@ -1,0 +1,37 @@
+AIMP Companion Control 0.3.1 preview
+Prepared: 2026-10-19
+
+Server source:
+https://github.com/slv-tech/AIMP-Remote-Control-Server
+Tag: v2.0.0
+Commit: b42fccd65c964535fcfbdcc760967ccb27b48bf4
+Licence: MIT, Copyright (c) 2026 SLV Tech (LICENSE retained).
+
+Companion protocol reference (not bundled, not modified):
+https://github.com/bitfocus/companion-module-aimp-audioplayer
+Tag: v2.0.1
+Commit: 45146294ef4561ef9c18572415c0e8da3d7be4d2
+
+JSON dependency:
+nlohmann/json v3.11.2, single_include/nlohmann/json.hpp
+https://github.com/nlohmann/json/tree/v3.11.2
+SHA-256: 665fa14b8af3837966949e8eb0052d583e2ac105d3438baba9951785512cf921
+The vendored header is byte-for-byte identical to this upstream version.
+The header retains its SPDX notices; the complete upstream MIT licence is in
+third_party/json-LICENSE.MIT (added during publication review, 2026-10-19).
+No HTTP library is used in the fork.
+
+AIMP SDK:
+Headers from the server source above, targeting AIMP v5.40 build 2650.
+Original author/copyright notices retained. Official SDK: https://www.aimp.ru/
+The official stable SDK 5.40 archive was independently downloaded and verified
+against published SHA-256 aa449fed93b93af7880a5580d71265231d048115e837b8d79f0c32aec59537a7.
+New interface use was checked against its C++/Delphi declarations and CHM help.
+See docs/CAPABILITY-MATRIX-0.3.0.md for ABI discrepancies and workarounds.
+
+New/modified source files retain the repository's MIT terms.
+This is an independent preview fork; it is not an official SLV Tech, AIMP, or Bitfocus release.
+
+0.3.1 safety correction: extended focused playlist/track operations read actual
+AIMP active-playlist and focus-index state. Missing focus never defaults to entry
+zero. Legacy focus-navigation behavior and original 0.3.0 contracts are retained.

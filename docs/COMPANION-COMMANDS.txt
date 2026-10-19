@@ -1,0 +1,327 @@
+All 22 protocol command strings used by Companion v2.0.1 are implemented.
+This is a source-contract comparison, not an end-to-end AIMP test.
+
+focus/play
+focus/playlist/next
+focus/playlist/prev
+focus/track/next
+focus/track/prev
+player/auto-jump/toggle
+player/mute
+player/next
+player/pause
+player/play
+player/position/set
+player/prev
+player/repeat/toggle
+player/shuffle/toggle
+player/stop
+player/volume/set
+playlists/get
+playlists/play
+playlists/select
+playlists/track/play
+playlists/track/select
+playlists/tracks/get
+
+===============================================================================
+AIMP Companion Control 0.2.1 -- protocol 2 additions
+===============================================================================
+
+Transport and response rules
+----------------------------
+WebSocket JSON text at ws://<AIMP computer>:19122/ (default loopback only).
+Send one command at a time. Every command has an "action" string and every reply
+repeats that action. Unsolicited player events can arrive between replies.
+There are no request IDs; after a request times out, close that connection before
+sending another command. Do not replay mutations after reconnecting.
+
+New-command failures have {"action":"...","error":{"code":"..."}} and may
+also include a message/detail and HRESULT. A successful write does not mean a
+parameter was available before testing it: inspect the capability catalogue and
+the returned state. Never treat an absent/null field as an authoritative zero.
+
+Native command handlers execute on the AIMP main thread. Native values use the
+SDK units described below. All playlist, track, queue and EQ band indexes are
+zero-based; Companion can display human-friendly one-based numbers.
+
+Preserved legacy commands beyond the 22-action upstream comparison above
+-----------------------------------------------------------------------
+player/status
+player/volume/get
+player/shuffle/get
+player/repeat/get
+player/auto-jump/get
+focus/get
+playlists/get/one          playlist_id
+playlists/track/get        playlist_id, track_id
+playlists/resume           playlist_id
+
+The original 31 routes, including their payloads and response shapes, remain
+available. The first section is retained as the historical v2.0.1 comparison.
+
+Direct media playback
+---------------------
+player/play-file          uri:string, one file path/FileURI or supported media URL
+
+Requests playback through IAIMPServicePlayer.Play4. UTF-8 is preserved, input is
+limited to 16384 bytes, and NUL/control characters are rejected. No shell,
+subprocess, command interpreter, or operating-system URL launcher is involved.
+Normal media plays without being added to a playlist. A playlist-file URI is an
+SDK-defined exception: AIMP imports it before playback, even with that flag.
+The response {ok:true,accepted:true,library_changed:true} acknowledges loading
+was queued; it does not claim the file opened or audio started. Observe normal
+player status/events for the result and refresh inventory after a short delay
+because a playlist-file request can create or update playlists.
+
+Example (the path is on the AIMP computer):
+  {"action":"player/play-file","uri":"D:\\Music\\Track.flac"}
+
+Discovery and extended state (read only)
+----------------------------------------
+{"action":"capabilities/get"}
+  -> {protocol_version:2, plugin_version:"0.3.1", capabilities:{
+        audio:[{id,label,type,min,max,default,step,unit,supported}],
+        equalizer:{available,band_count,min,max,step,unit,preamp,
+                   presets_available},
+        player_options:{parameter:{label,type,available,min?,max?,choices?}},
+        app_options:{parameter:{label,type,available}},
+        recording:{available}, loop:{available,range,cycle},
+        output:{available,list},
+        app_commands:{command:{label,available,enabled,acknowledgement,
+                               param_min?,param_max?}},
+        library:{available,queue,queue_suspended,commands,sort_modes,
+                 track_targets,playlist_targets,rating,limits}
+     }}
+
+{"action":"extensions/get"}
+  -> {audio:{parameter:value}, equalizer:{...}, player_options:{...},
+      app_options:{...}, recording:{enabled}, loop:{stage,a,b,range_available},
+      output:{current,devices:[{id,name}],list_available}, last_app_command,
+      queue?:{count,suspended?,offset,limit,items,has_more}}
+  Contains at most one queue item; use queue/get for pages. Read failures may
+  appear as absent/null fields or equalizer.read_errors. Capability availability
+  describes what this AIMP installation exposes; it is not a playback test.
+
+Audio / DSP
+-----------
+audio/get                 No arguments; returns audio and equalizer state.
+audio/set                 parameter, value
+audio/adjust              parameter, delta (numeric parameters only)
+audio/reset               parameter optional; omitted resets supported DSP
+                          parameters to their documented neutral defaults.
+audio/toggle              parameter="equalizer_auto" (boolean only)
+
+Parameters and accepted SDK ranges:
+  balance         -1..1        neutral 0       suggested step 0.01
+  chorus           0..1        neutral 0       suggested step 0.01
+  echo             0..1        neutral 0       suggested step 0.01
+  enhancer         1..4        neutral 1       suggested step 0.05
+  flanger          0..1        neutral 0       suggested step 0.01
+  reverb           0..1        neutral 0       suggested step 0.01
+  pitch          -10..10       neutral 0       suggested step 0.1
+  speed          0.5..1.5      neutral 1       suggested step 0.01, multiplier
+  tempo          0.8..1.5      neutral 1       suggested step 0.01, multiplier
+  bass             0..2        neutral 0       suggested step 0.05
+  equalizer_auto   false/true  neutral false
+
+Pitch uses the SDK's documented numeric range; the SDK does not explicitly
+label its unit, so do not label this field as semitones or percent. Enhancer
+uses the common 1..4 range of the SDK header and reference-help descriptions.
+Numeric /set rejects values outside the range; /adjust clamps at the limits.
+Changes read the actual native value back and return updated audio/EQ state.
+
+Examples:
+  {"action":"audio/adjust","parameter":"pitch","delta":0.1}
+  {"action":"audio/reset","parameter":"pitch"}
+  {"action":"audio/set","parameter":"speed","value":1.05}
+
+Equalizer
+---------
+equalizer/get             Returns equalizer state, including dynamic bands.
+equalizer/presets/get     Returns the same state, including installed preset names.
+equalizer/set             enabled:boolean and/or preamp:number (-15..15 dB)
+equalizer/toggle          Toggle native EQ enabled state.
+equalizer/preamp/set      value:number (-15..15 dB)
+equalizer/preamp/adjust   delta:number
+equalizer/band/set        band:integer, value:number (-15..15 dB)
+equalizer/band/adjust     band:integer, delta:number
+equalizer/reset           Set preamp and every current band to 0 dB.
+equalizer/preset/apply    name:string, exact installed preset name
+
+Band count and frequencies come from the running AIMP instance. Do not hard-code
+18 bands or assume preset names are the same on all installations. A reset does
+not toggle EQ enable state. Relative changes clamp; absolute values are checked.
+
+Player behaviour and transitions
+--------------------------------
+player/options/get
+player/options/set        parameter:string, value:boolean/integer
+
+  action_on_end_of_track:     0 normal; 1 next track and stop; 2 next and pause
+  action_on_end_of_playlist:  0 next playlist; 1 repeat playlist; 2 stop at end
+  repeat_single_file_playlists, crossmixing, radio_capture_single_track:
+                             boolean
+  auto_transition, manual_transition:
+                             boolean
+  auto_crossfade_ms, auto_fade_in_ms, auto_fade_out_ms, auto_pause_ms,
+  manual_crossfade_ms, manual_fade_in_ms, manual_fade_out_ms:
+                             nonnegative integer milliseconds
+
+Timing values are checked against Int32 range. AIMP may reject or clamp them;
+use the returned native state. Zero disables that individual timing value.
+
+A-B loop and radio recording
+----------------------------
+loop/get                  -> loop:{stage,a,b,range_available}
+loop/cycle                Advance AIMP's native A-B loop stage at current position.
+loop/set                  a:number|null, b:number|null, in seconds
+                          null/null clears the range; a/null sets A only.
+                          A must precede B and both must fit a seekable track.
+recording/get             -> recording:{enabled:boolean|null}
+recording/set             enabled:boolean
+
+Recording is AIMP's internet-radio capture feature. This is not microphone,
+system-audio or arbitrary-track recording. Destinations/formats remain under
+AIMP's own recording settings. The read-only diagnostic never starts recording.
+
+Output device
+-------------
+output/get                -> output:{current,devices:[{id,name}],list_available}
+output/set                id:string, exactly an entry returned by output/get
+
+The native SDK output list determines supported devices and identifiers.
+No guessed device IDs, system-default changes, or automatic fallback are used.
+
+Application settings and commands
+---------------------------------
+app/options/get
+app/options/set           parameter:string, value:boolean
+  stay_on_top, reverse_time, minimized_to_tray, visual_fullscreen
+
+app/command               command:string; param only for dsp_manager (0..3)
+
+Allowed command names:
+  quick_info, about, options, plugins, scheduler,
+  visual_next, visual_prev, visual_start, visual_stop,
+  play_previous_playlist,
+  open_files, open_folders, open_playlists, save_playlist,
+  bookmarks, bookmark_playing, bookmark_selected,
+  rescan_tags, rescan_selected_tags, focus_playing,
+  enable_selected, disable_selected,
+  add_files, add_folders, add_playlists, add_url,
+  quick_tag_editor, search, dsp_manager
+
+UI commands return {acknowledgement:"queued",last_app_command:{command,status}}
+before execution. Completion/failure is visible in extensions/get as
+last_app_command:{command,status,hresult?}. "queued" is not confirmation that the
+requested dialog/action completed. Only one application command is queued or
+executing at a time; APP_COMMAND_BUSY asks the caller to wait. Disabled commands
+return APP_COMMAND_DISABLED. quick_tag_editor opens AIMP's editor; the bridge
+never automatically writes file tags.
+
+Playlist / track selection rules for new library commands
+---------------------------------------------------------
+Playlist target:
+  target:"active" (default), "focused", "playing", or "explicit"
+  With playlist_id and no target, "explicit" is assumed.
+  An explicit target requires playlist_id.
+
+Track target:
+  target:"focused" (default), "playing", or "explicit"
+  With playlist_id/track_id and no target, "explicit" is assumed.
+  An explicit target requires both playlist_id and track_id.
+
+Since 0.3.1, focused library commands resolve the active AIMP playlist directly.
+A focused track must have a valid current SDK focus index. No active playlist
+returns NO_FOCUSED_PLAYLIST; absent, group-only, or invalid track focus returns
+NO_FOCUSED_TRACK before the operation. There is no implicit first-track fallback.
+Focused means one focused track, not every highlighted/selected track.
+
+Numeric indexes identify the current loaded ordering. Re-resolve a stored
+playlist GUID/path against fresh inventory after edits; do not retain stale
+numeric indexes across playlist changes. IDs unavailable in a bounded queue
+lookup may be -1 in replies and must not be used as explicit command targets.
+
+Playback queue
+--------------
+queue/get                 offset=0, limit=100 (1..250)
+  -> queue:{count,suspended?,offset,limit,items:[{queue_index,playlist_id,
+            track_id,id,title,artist,album,file_path,duration?,enabled?,
+            selected?,rating?}],has_more}
+queue/add                 Track target; first:boolean=false
+queue/remove              Track target OR queue_index:integer
+queue/move                queue_index:integer, target_index:integer
+queue/clear               Remove all queued entries, maximum 10000 per operation.
+queue/suspended           value:boolean; returns actual native suspension state.
+
+Queue changes affect playback order only and never delete playlist entries or
+media. Mutations return current queue count; use queue/get for the new order.
+
+Playlist management
+-------------------
+playlists/info            Playlist target
+  -> playlist:{id,aimp_id,name,track_count,read_only?,duration?,
+               remaining_duration?,size_bytes?}
+  duration fields are seconds; remaining_duration requires SDK support.
+playlists/create          name:string (1..1024 UTF-8 bytes), activate:boolean=true
+playlists/rename          Playlist target, name:string
+playlists/close           Playlist target; unloads tab while preserving saved file.
+playlists/add             Playlist target, uri:string, insert_at:integer=-1
+  uri is one media FileURI/path/URL (maximum 16384 UTF-8 bytes).
+  -1 appends; 0..track_count inserts at that current position.
+  Normal AIMP format checking remains active; virtual-file expansion is disabled.
+  AIMP loads asynchronously: accepted:true means queued, not finished. Refresh
+  inventory after a short delay and again if loading is still in progress.
+playlists/clear           Playlist target; removes entries only, not disk files.
+playlists/sort            Playlist target, mode:string
+  title, filename, duration, artist, reverse, random, random_groups,
+  random_group_items, random_all
+
+Track management
+----------------
+playlists/track/info      Track target -> track:{...metadata,enabled,selected,rating}
+playlists/track/remove    Track target; removes playlist entry only.
+playlists/track/move      Track target, target_index:integer in the same playlist.
+playlists/track/enabled   Track target, value:boolean
+playlists/track/rating    Track target, value:number (0..5; fractional stars allowed)
+
+Successful playlist/track mutations include library_changed:true. Reload the
+inventory so generated track presets, indexes, names and metadata remain correct.
+Removal/clear commands are user-triggered edits; they are never diagnostic calls.
+
+Playing file metadata (read only)
+--------------------------------
+player/fileinfo           -> file_info:{...} or null while stopped
+
+Metadata includes title/artist/album/album_artist, file_path, genre/year, track
+and disc numbers/totals, composer/copyright/publisher, codec, conductor/mood,
+catalog/ISRC/lyricist/encoded_by/key/labels/URL/comment/lyrics, duration, bitrate,
+BPM, channel count, sample rate, bit depth, size, ReplayGain values, tag/library
+ratings and play count when available. Library timestamps use raw Delphi
+TDateTime values under library_added_tdatetime and last_played_tdatetime.
+String fields are capped at 4096 UTF-16 code units; queue summary strings at 256.
+No album-art binary data, file contents, credentials, or arbitrary files are read
+or returned by these metadata commands.
+
+Read-only Windows acceptance check
+----------------------------------
+  .\scripts\Test-Features.ps1
+  .\scripts\Test-Features.ps1 -Address 192.168.1.20 -Port 19122
+
+This checks capabilities/get, extensions/get, player/status, playlists/info
+(target playing), and player/fileinfo with per-request 10-second deadlines.
+It changes no settings and performs no actions. No playing playlist/file is a
+normal result while stopped. Unsupported routes and real query failures are
+reported explicitly. Passing reads does not verify listening/rotary behaviour.
+
+EQ preset creation (0.2.0)
+--------------------------
+equalizer/preset/save {name}: save current band gains to a NEW named preset.
+Requires capabilities.equalizer.preset_save=true. Names must be unique, at most
+512 UTF-8 bytes / 128 UTF-16 code units, with no path/control characters or
+leading/trailing spaces/dots. Does not overwrite. On success saved_preset gives
+name, band_count, includes_preamp:false. The documented preset interface has no
+preamp field. No preset deletion route: built-in/user presets cannot be
+distinguished. A failed initialization rolls back only the newly created preset.
+Capabilities also expose preset_save_preamp:false and preset_delete:false.

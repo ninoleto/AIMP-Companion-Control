@@ -1,0 +1,12 @@
+[AimpCompanionControl]
+OptionsPageName=Companion Control
+[AimpCompanionControl.Options]
+GrpServer=WebSocket server
+LblPort=Port:
+LblInterface=Listen interface:
+GrpAccess=Access policy
+ChkAllowOnly=Allow access only from:
+LblAllowList=IP / CIDR list:
+[AimpCompanionControl.Description]
+Text=WebSocket control for AIMP Companion module v2.0.1. Local access is enabled by default.
+Note=For Companion on another computer, select your LAN interface and add its IPv4 address to the access list. Use a trusted local network.

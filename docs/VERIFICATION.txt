@@ -1,0 +1,49 @@
+VERIFICATION — AIMP Companion Control 0.3.1 preview
+2026-10-19
+
+Change scope:
+- Extended library focused targets resolve the actual current active playlist
+  and SDK FOCUSINDEX. Missing, invalid, or group-only track focus is rejected
+  before retrieving or changing an entry; no implicit first-entry fallback.
+- Explicit and playing targets and legacy focus navigation remain unchanged.
+- Runtime capability version, plugin name, PE version resources, installer
+  filename, and installation instructions identify 0.3.1.
+- Original 0.3.0 source remains a separate unchanged copy. Existing 0.3.0 protocol
+  documents remain applicable, with the focus correction documented alongside.
+
+Completed portable checks (scripts/test.sh, exit 0):
+- 73 protocol/input assertions and 50,000 deterministic malformed inputs.
+- Audio range, finite-number, clamped-adjustment and dynamic-band validation.
+- Tag-write confirmation, file identity, field allowlist, types and input bounds.
+- Media UTF-8, image bounds/aspect ratio and lyric-time validation.
+- Music-library typed filters, query bounds, cursor isolation and stale-row guards.
+- 16 actual-implementation EQ preset SDK-double scenarios.
+- 21 actual-implementation focus resolver SDK-double scenarios. The regression
+  fails against original 0.3.0 because missing focus selects cached entry zero.
+- Tests ran with AddressSanitizer and UndefinedBehaviorSanitizer. Leak detection
+  is disabled because executor process inspection is restricted.
+
+Final binary/package checks:
+- Complete x64 and x86 DLL build with pinned LLVM-MinGW 20261006/UCRT: exit 0.
+- Both PE files export undecorated AIMPPluginGetHeader and enable ASLR and NX.
+- No external libstdc++, libgcc_s, libwinpthread or libc++ runtime dependency.
+- Both PE fixed file/product versions are 0.3.1.0, with 0.3.1-preview strings.
+- PE header/import/export reports regenerated from the final DLLs.
+- AIMPPACK integrity passed; both DLLs and language-file members exactly match
+  standalone source artifacts. All dist/SHA256SUMS.txt digests verified.
+- Ordinary unsigned DLLs without packing or obfuscation.
+
+AIMPPACK SHA-256:
+85d05860db83edce61053d3bf012bd15bcc454ec10bd29622716d8ab6bd3f33e
+
+Not performed here:
+- Execution inside Windows AIMP, actual focus/group UI interaction, plugin
+  reload/unload, or end-to-end Companion control with the user's installation.
+- Microsoft Defender scanning, publisher signing, or AIMP 6 beta validation.
+- PowerShell diagnostic execution.
+
+The numeric-index protocol still requires fresh inventory for explicit targets;
+this patch adds no expected-GUID precondition for multi-request clients. Keep the
+previous working native/module packages. The SDK-double and cross-compilation
+checks establish source behavior and binary construction, not Windows runtime
+acceptance or an exhaustive security audit.
